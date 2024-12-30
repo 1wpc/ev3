@@ -17,14 +17,15 @@ import time
 ev3 = EV3Brick()
 
 
-# Write your program here.
 # ev3.speaker.beep()
 # Initialize the motors.
 left_motor = Motor(Port.A)
 right_motor = Motor(Port.B)
+tool_motor = Motor(Port.C)
 
 # Initialize the color sensor.
-line_sensor = ColorSensor(Port.S2)
+line_sensor = ColorSensor(Port.S1)
+distance_sensor = UltrasonicSensor(Port.S2)
 
 # Initialize the drive base.
 robot = DriveBase(left_motor, right_motor, wheel_diameter=55.5, axle_track=95)
@@ -32,7 +33,7 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=55.5, axle_track=95)
 # Calculate the light threshold. Choose values based on your measurements.
 BLACK = 2
 WHITE = 16
-threshold = (BLACK + WHITE) / 2 + 3
+threshold = (BLACK + WHITE) / 2 + 2
 
 # Set the drive speed at 100 millimeters per second.
 DRIVE_SPEED = 100
@@ -50,32 +51,47 @@ start = time.time()
 end = time.time()
 last_deviation = line_sensor.reflection() - threshold
 corner = 1
+FIRE_DISTANCE = 75
+
+def putOff(dtc_to_fire):
+    robot.turn(90)
+    robot.straight(dtc_to_fire)
+    for i in range(3):
+        tool_motor.run_angle(500, -90)
+        tool_motor.run_angle(500,90)
+    robot.straight(-dtc_to_fire)
+    robot.turn(-90) 
+
 while True:
     wait(10)
-    # Calculate the deviation from the threshold.
     deviation = line_sensor.reflection() - threshold
     v_deviation = (deviation - last_deviation) / 10
     last_deviation = deviation
     if v_deviation <= -0.2:
-        if corner == 3:
-            robot.drive(DRIVE_SPEED*0.25, 90)
+        if corner >= 3:
+            robot.drive(DRIVE_SPEED*0.25, 120)
         else:
             robot.drive(DRIVE_SPEED*0.25, -90)
         corner+=1
         while True:
             wait(10)
-            if line_sensor.reflection() >= 13:
-                wait(20)
+            if line_sensor.reflection() >= 12:
+                wait(15)
+                if corner == 3:
+                    robot.stop()
+                    wait(2000)
+                    ev3.speaker.beep()
+                    SoundFile.KUNG_FU.play()
+                    robot.straight(100)
                 break
         last_deviation = line_sensor.reflection() - threshold
         continue
 
-    # Calculate the turn rate.
-    if deviation > 0:
-        turn_rate = PROPORTIONAL_GAIN * deviation + 3
-    else:
-        turn_rate = PROPORTIONAL_GAIN * deviation - 3
-    # turn_rate = PROPORTIONAL_GAIN * deviation
+    if corner > 3 and distance_sensor.distance() < FIRE_DISTANCE:
+        robot.stop()
+        putOff(distance_sensor.distance())
 
-    # Set the drive base speed and turn rate.
+    # Calculate the turn rate.
+    turn_rate = PROPORTIONAL_GAIN * deviation + (3 if deviation > 0 else -3)
+
     robot.drive(DRIVE_SPEED, turn_rate)
