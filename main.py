@@ -33,7 +33,7 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=55.5, axle_track=95)
 # Calculate the light threshold. Choose values based on your measurements.
 BLACK = 2
 WHITE = 16
-threshold = (BLACK + WHITE) / 2 + 2
+threshold = (BLACK + WHITE) / 2 + 1
 
 # Set the drive speed at 100 millimeters per second.
 DRIVE_SPEED = 100
@@ -49,12 +49,14 @@ PROPORTIONAL_GAIN = 1.2
 # Start following the line endlessly.
 start = time.time()
 end = time.time()
-last_deviation = line_sensor.reflection() - threshold
+last_ref = line_sensor.reflection()
 corner = 1
-FIRE_DISTANCE = 75
+FIRE_DISTANCE = 750
+count = 0
 
 def putOff(dtc_to_fire):
-    robot.turn(90)
+    robot.straight(20)
+    robot.turn(110)
     robot.straight(dtc_to_fire)
     for i in range(3):
         tool_motor.run_angle(500, -90)
@@ -62,29 +64,39 @@ def putOff(dtc_to_fire):
     robot.straight(-dtc_to_fire)
     robot.turn(-90) 
 
+def delay(time):
+    while True:
+        wait(10)
+        if line_sensor.reflection() >= 10:
+            wait(time)
+            return
+
 while True:
-    wait(10)
+    count += 1
+    wait(5)
     deviation = line_sensor.reflection() - threshold
-    v_deviation = (deviation - last_deviation) / 10
-    last_deviation = deviation
-    if v_deviation <= -0.2:
-        if corner >= 3:
-            robot.drive(DRIVE_SPEED*0.25, 120)
-        else:
-            robot.drive(DRIVE_SPEED*0.25, -90)
-        corner+=1
-        while True:
-            wait(10)
-            if line_sensor.reflection() >= 12:
-                wait(15)
-                if corner == 3:
-                    robot.stop()
-                    wait(2000)
-                    ev3.speaker.beep()
-                    SoundFile.KUNG_FU.play()
-                    robot.straight(100)
-                break
-        last_deviation = line_sensor.reflection() - threshold
+    if count == 8:
+        cur_ref = line_sensor.reflection()
+        v_ref = (cur_ref - last_ref) / 40
+        print(v_ref)
+        last_ref = cur_ref
+        if v_ref <= -0.1:
+            print(corner)
+            if corner == 3 or corner > 5:
+                robot.drive(DRIVE_SPEED*0.25, 120)
+                wait(600)
+                delay(120)
+            elif corner == 4 or corner == 5:
+                robot.drive(DRIVE_SPEED*0.25, 0)
+                wait(500)
+                continue
+            else:
+                robot.drive(DRIVE_SPEED*0.1, -100)
+                wait(100)
+                delay(10)
+            corner+=1
+            last_ref = line_sensor.reflection()
+        count = 0
         continue
 
     if corner > 3 and distance_sensor.distance() < FIRE_DISTANCE:
