@@ -44,7 +44,7 @@ DRIVE_SPEED = 100
 
 # For example, if the light value deviates from the threshold by 10, the robot
 # steers at 10*1.2 = 12 degrees per second.
-PROPORTIONAL_GAIN = 1.2
+PROPORTIONAL_GAIN = 1.4
 
 # Start following the line endlessly.
 start = time.time()
@@ -57,12 +57,12 @@ count = 0
 def putOff(dtc_to_fire):
     robot.straight(20)
     robot.turn(110)
-    robot.straight(dtc_to_fire)
+    robot.straight(dtc_to_fire-10)
     for i in range(3):
         tool_motor.run_angle(500, -90)
         tool_motor.run_angle(500,90)
-    robot.straight(-dtc_to_fire)
-    robot.turn(-90) 
+    robot.straight(-dtc_to_fire-20)
+    robot.turn(-120) 
 
 def delay(time):
     while True:
@@ -91,9 +91,9 @@ while True:
                 wait(500)
                 continue
             else:
-                robot.drive(DRIVE_SPEED*0.1, -100)
+                robot.drive(DRIVE_SPEED*0.14, -100)
                 wait(100)
-                delay(10)
+                delay(0)
             corner+=1
             last_ref = line_sensor.reflection()
         count = 0
