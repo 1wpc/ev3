@@ -85,7 +85,7 @@ while True:
             if corner == 3 or corner > 5:
                 robot.drive(DRIVE_SPEED*0.25, 120)
                 wait(600)
-                delay(120)
+                delay(200)
             elif corner == 4 or corner == 5:
                 robot.drive(DRIVE_SPEED*0.25, 0)
                 wait(500)
