@@ -62,13 +62,13 @@ def putOff(dtc_to_fire):
         return
     robot.stop()
     robot.straight(40)
-    robot.turn(100)
+    robot.turn(103)
     robot.straight(dtc_to_fire-15)
     for i in range(3):
         tool_motor.run_angle(500, -90)
         tool_motor.run_angle(500,90)
     robot.straight(-dtc_to_fire-25)
-    robot.turn(-125) 
+    robot.turn(-130) 
 
 def delay(time):
     while True:
@@ -97,7 +97,7 @@ while True:
                 wait(500)
                 continue
             else:
-                robot.drive(DRIVE_SPEED*0.14, -100)
+                robot.drive(DRIVE_SPEED*0.08, -60)
                 wait(100)
                 delay(0)
             corner+=1
