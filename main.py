@@ -53,16 +53,22 @@ last_ref = line_sensor.reflection()
 corner = 1
 FIRE_DISTANCE = 750
 count = 0
+putoff_count = 0
 
 def putOff(dtc_to_fire):
-    robot.straight(20)
-    robot.turn(110)
-    robot.straight(dtc_to_fire-10)
+    global putoff_count
+    putoff_count += 1
+    if putoff_count > 3:
+        return
+    robot.stop()
+    robot.straight(40)
+    robot.turn(100)
+    robot.straight(dtc_to_fire-15)
     for i in range(3):
         tool_motor.run_angle(500, -90)
         tool_motor.run_angle(500,90)
-    robot.straight(-dtc_to_fire-20)
-    robot.turn(-120) 
+    robot.straight(-dtc_to_fire-25)
+    robot.turn(-125) 
 
 def delay(time):
     while True:
@@ -100,7 +106,6 @@ while True:
         continue
 
     if corner > 3 and distance_sensor.distance() < FIRE_DISTANCE:
-        robot.stop()
         putOff(distance_sensor.distance())
 
     # Calculate the turn rate.
